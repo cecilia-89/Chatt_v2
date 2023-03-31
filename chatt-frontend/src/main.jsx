@@ -10,12 +10,18 @@ import {
           Route
         } from 'react-router-dom'
 import Sidebar from './components/Sidebar/sidebar'
+import { allReducers }from '../src/reducers/index'
+import { createStore } from 'redux';
+import { Provider} from 'react-redux'
 import './index.scss';
+
+const store = createStore(allReducers);
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <Router>
+  <Provider store={store}>
+   <Router>
       <Routes>
         <Route path="/messages" element={<Sidebar />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
@@ -25,5 +31,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <Route path="*" element={<h2>Page Not Found</h2>}></Route>
       </Routes>
     </Router>
+  </Provider>
   </React.StrictMode>
 );

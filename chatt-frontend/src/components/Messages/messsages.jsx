@@ -3,24 +3,40 @@ import axios from '../../axios'
 import cookies from '../../cookies'
 import { v4 } from 'uuid';
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useSelector, useDispatch} from 'react-redux'
+import { useMediaQuery } from 'react-responsive'
+import { Display, mediaQuery } from '../../actions/index';
 
 
 const Messages = ({ messages, user, other, otherUser, setContainers, setState, setSearchInput, socket, setMessages}) => {
 
     const [input, setInput] = useState('')
     const scrollbar = useRef(null);
+    const message = useRef()
     const lastMessage = useRef(null);
     const setRef = useCallback(node => {
         if (node) { node.scrollIntoView({ smooth: true }); }
     })
-    const cookie = cookies.get('X-Token');
+    const cookie = cookies.get('X-Token')
 
+    const messageDisplay = useSelector(state => state.setDisplay);
+    const isMobile = useMediaQuery({query: `(max-width: 760px)`});
+    const dispatch = useDispatch()
+
+
+    // responsive based on media width
     useEffect(() => {
-        const query = window.matchMedia("(max-width: 768px)");
-        if (query.matches || !media) {
+
+        if (!isMobile || (isMobile && !messageDisplay)) {
             message.current.style.display = 'block';
+
+        } else if (isMobile && messageDisplay) {
+            message.current.style.display = 'none';
         }
-    }, [])
+
+    }, [messageDisplay, isMobile])
+
+
 
     const sendMessage = async (e) => {
         e.preventDefault()
@@ -61,7 +77,7 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
         }
     }, [messages]);
 
-    const display = () => {
+    const displayMessage = () => {
         if (messages.length === 0 && otherUser === null) {
             return (
             <div ref={scrollbar} className="empty">
@@ -78,13 +94,14 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
         return (
             <>
             <div className="user-nav">
+                {window.matchMedia('(max-width: 768px)').matches ? <span onClick={() => dispatch(Display())}><ion-icon name="arrow-back-outline"></ion-icon></span> : null}
                 <div><img src="../../src/images/profile (1).png" alt="" /></div>
                 <div>
                     <p>{other.name}</p>
                     <p>Last reply at {other.lastSeen}</p>
                 </div>
                 <div>
-                    <ion-icon name="call-outline"></ion-icon>
+                    <ion-icon name="call"></ion-icon>
                 </div>
             </div>
 
@@ -123,16 +140,16 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
                 </>
             )
         }
-    }
+
 
 
     return (
         <section ref={message} className='messages-wrapper'>
 
-            {display()}
+            {displayMessage()}
 
         </section>
         );
-
+};
 
 export default Messages;

@@ -1,12 +1,16 @@
 import './sidebar.scss';
 import Messages from '../Messages/messsages'
-import Pusher from 'pusher-js'
 import axios from '../../axios'
 import cookies from '../../cookies';
 import gsap from 'gsap';
 import io from 'socket.io-client';
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch} from 'react-redux'
+import { Display, mediaQuery } from '../../actions/index';
+import { useMediaQuery } from 'react-responsive'
+
+
 const defaultPic = '../../src/images/profile (1).png';
 let socket;
 
@@ -15,6 +19,26 @@ const Sidebar = () => {
     // browser cookie
     const cookie = cookies.get('X-Token');
     const userId = cookies.get('chatt_userId');
+    const [input, setInput] = useState(null);
+    const display = useSelector(state => state.setDisplay)
+    const dispatch = useDispatch();
+    const isMobile = useMediaQuery({ query: `(max-width: 760px)` });
+
+
+    // responsive based on media width
+    useEffect(() => {
+        if (!input) setState(true)
+
+        if (!isMobile || (isMobile && display)) {
+            sidebar.current.style.display = 'block';
+
+        } else if (isMobile && !display) {
+            sidebar.current.style.display = 'none';
+        }
+
+    }, [display, input, isMobile])
+
+
 
     // socket instance
     useEffect(() => {
@@ -23,15 +47,6 @@ const Sidebar = () => {
         console.log('connecting')
         return () => socket.disconnect();
     }, []);
-
-
-
-    // useEffect(() => {
-    //     socket.emit('user connect', userId);
-    //     // socket.on('connected to socket', () => {
-    //     //     alert('connected to socket');
-    //     // })
-    // }, [socket]);
 
     // DOM references
     const chatt = useRef()
@@ -51,7 +66,6 @@ const Sidebar = () => {
     const [user, setUser] = useState([])
     const msg = useRef(null);
     const [Msg, setMsg] = useState("");
-    const [input, setInput] = useState(null);
     const [inputs, setInputs] = useState({});
     const [messages, setMessages] = useState([])
     const [allUsers, setAllUsers] = useState([]);
@@ -127,14 +141,7 @@ const Sidebar = () => {
             if (message.containerId === other.id) {
                 setMessages((messages) => setMessagesOnly(messages, message));
             }
-            // axios.get("containers/all", {
-            //     headers: {
-            //     'X-Token': cookie
-            //     }
-            // }).then((response) => {
 
-            // // setContainers(response.data)
-            // });
         });
         return () => socket.off('new message');
     });
@@ -154,14 +161,6 @@ const Sidebar = () => {
         return () => socket.off('container updated');
     });
 
-
-    const mediaQuery = () => {
-        const query = window.matchMedia("(max-width: 768px)");
-        if (query.matches && media) {
-            sidebar.current.style.display = 'none';
-            setMedia(!state)
-        }
-    }
 
     const getMessages = (id, otheruser) => {
         setOtherUser(otheruser);
@@ -204,16 +203,14 @@ const Sidebar = () => {
         return (
             containers.map((container) => {
 
-                return (<div className="wrap" key={container._id}
-                             onClick={(e) => {getMessages(container._id);
-                                             getName(container.membersUsernames.filter(name => name !== user.username));
-                                             getlastSeen( container.timestamp.time);
-                                             getId(container._id);
-                                             get_id(container.members.filter(member => member !== user.id));
-                                             getContainer(container);
-                                             setMembers(container.members);
-                                             mediaQuery()
-                                             }}>
+                return (<div className="wrap" key={container._id} onClick={() => {dispatch(Display())
+                                                                                getMessages(container._id);
+                                                                                getName(container.membersUsernames.filter(name => name !== user.username));
+                                                                                getlastSeen( container.timestamp.time);
+                                                                                getId(container._id);
+                                                                                get_id(container.members.filter(member => member !== user.id));
+                                                                                getContainer(container);
+                                                                                setMembers(container.members);}}>
                     <div>
                         <img src={defaultPic} alt="" />
                         <div className={'notifications'}>
@@ -285,19 +282,16 @@ const Sidebar = () => {
           });
     }
 
-    const setBorder = () => {
-
-    }
 
     const handleChange = (event) => {
         const query = event.target.value;
 
         if (!query) {
-            searchWrapper.current.style.display = 'none';
             setInput(null);
+            setState(true)
         } else {
-            searchWrapper.current.style.display = 'flex';
             setInput(query);
+            setState(false)
         }
     }
 
@@ -308,6 +302,10 @@ const Sidebar = () => {
       }
 
     const getContainer = (receiver) => {
+        if (window.matchMedia('(max-width: 768px)').matches) {
+            setInput(null)
+        }
+
         axios.get(`/container/${receiver}`, {
             headers: {
                 'X-Token': cookies.get('X-Token')
@@ -331,14 +329,13 @@ const Sidebar = () => {
                 return false;
             }
         });
-        if (!match.length && input) {
+        if (!match.length) {
             return (<div className='noUser' >No users found</div>)
         } else {
 
             return match.map((user) => {
-                console.log('user', user)
                 return (
-                    <div className='wrap' onClick={() => {
+                    <div className='wrap' onClick={() => {dispatch(Display())
                         getContainer(user.id);
                         getName(user.username);
                         get_id(user.id);
@@ -409,10 +406,6 @@ const Sidebar = () => {
           }
         }
       }
-    useEffect(() => {
-        // socket.disconnect();
-    }, []);
-
 
 
     return (
@@ -438,7 +431,7 @@ const Sidebar = () => {
                     <ion-icon name="search-outline"></ion-icon>
                 </div>
 
-                <div ref={searchWrapper} className='search-wrapper'>
+                <div ref={searchWrapper} className={state? 'hidden': 'search-wrapper'}>
                     {matchedUsers()}
                 </div>
 
@@ -458,6 +451,7 @@ const Sidebar = () => {
                         setState={setState}
                         setSearchInput={setInput}
                         socket={socket}/>
+
             <div ref={loader} className='loading'>
                 <div ref={details}>
                     <p>Chatt Instant Messaging</p>
