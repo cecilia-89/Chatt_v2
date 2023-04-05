@@ -11,11 +11,12 @@ import {
         } from 'react-router-dom'
 import Sidebar from './components/Sidebar/sidebar'
 import { allReducers }from '../src/reducers/index'
-import { createStore } from 'redux';
+import { createStore, applyMiddleware } from 'redux';
+import thunk from 'redux-thunk';
 import { Provider} from 'react-redux'
 import './index.scss';
 
-const store = createStore(allReducers);
+const store = createStore(allReducers, applyMiddleware(thunk));
 
 
 ReactDOM.createRoot(document.getElementById('root')).render(

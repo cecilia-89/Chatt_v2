@@ -1,0 +1,183 @@
+@use '../../index.scss' as index;
+
+.profile-wrapper {
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    z-index:2;
+    opacity: 1;
+    position:absolute;
+
+
+    &>div {
+
+        width: 60%;
+        height:fit-content;
+        box-shadow: 1px 5px 10px 1px gray;
+        background-color: white;
+        align-self:center;
+        justify-self:center;
+        border-radius: 10px;
+        opacity: 1;
+
+        &>.header {
+             display: flex;
+             width: 100%;
+             height: 50px;
+             flex-direction: row;
+             align-items: center;
+             justify-content: space-between;
+             border-bottom: 1px solid lightgray;
+
+             .exit {
+                 height: 30px;
+                 display: flex;
+                 justify-content:center;
+                 align-self:center;
+                 margin-right: 10px;
+                 align-items: center;
+                 width: 30px;
+                 font-size: 20px;
+                 border-radius: 15px;
+                 cursor: pointer;
+
+
+                 &:hover {
+                     color: white;
+                     background: rgb(232, 62, 62);
+                 }
+             }
+
+             &>.header-text {
+                 align-self: center;
+                 color: index.$primary-color;
+                 padding-left: 20px;
+                 font-size: 25px;
+                 font-weight: bold;
+             }
+        }
+
+        &>div:nth-child(2) {
+           text-align: center;
+
+            span {
+                display: block;
+            }
+
+            .image {
+                max-height: 36vh;
+            }
+
+            span:first-of-type {
+                font-weight: bold;
+                color: index.$primary-color;
+                font-size: 25px;
+            }
+
+            span:nth-of-type(2) {
+                color: rgb(81, 79, 79);
+                font-size: 1.1em;
+            }
+
+            span:last-of-type {
+                color: rgb(107, 106, 106);
+                font-size: 1em;
+                padding:.6em;
+            }
+
+        }
+
+    &>div:last-child {
+        padding: 1em 0 0 1.5em;
+
+        p:first-child {
+            margin-top: 0;
+        }
+
+        p {
+            font-weight: bold;
+            span:hover {
+                text-decoration: underline;
+                cursor: pointer;
+            }
+        }
+    }
+}
+
+//    form {
+
+//     p {
+//         margin: 1em 1em;
+//     }
+
+//     div:first-child {
+//         text-align: left;
+//         margin: 0 10%;
+//     }
+
+//     div:first-child p:first-child{
+//         font-size: 1.5em;
+//         color: index.$primary-color;
+//         margin: 0;
+//         font-weight: bold;
+//     }
+
+//     div:first-child p:nth-child(2){
+//         color: rgba(43, 37, 37, 0.747);
+//         font-size: .8em;
+//         font-weight: 800;
+//         margin:0;
+//     }
+
+//     .quote {
+//         margin-top: .8em;
+//     }
+
+//     .quote {
+//         position: relative;
+
+//         ion-icon {
+//             position: absolute;
+//             color: index.$primary-color;
+//             bottom: 13px;
+//             left: 11%
+//         }
+//     }
+
+//     .message {
+//         color: red;
+//     }
+
+//     &>div {
+
+//         input {
+//             width: 100%;
+//             outline: none;
+//             padding-left: 30px;
+//             background: index.$secondary-color;
+//             margin-top: 5%;
+//             border: none;
+//             height: 40px;
+//             border-radius: 10px;
+//         }
+//     }
+
+//     // #button {
+//     //     width: 58%;
+//     //     height: 40px;
+//     //     background: index.$primary-color;
+//     //     border-radius: 10px;
+//     //     color: white;
+//     //     font-size: 1em;
+//     //     font-weight: bold;
+//     //     outline: none;
+//     //     margin-top: 8%;
+//     //     border: none;
+//     //     cursor: pointer;
+//     //     position: relative;
+//     //     justify-self: center;
+//     //     margin-left: auto;
+//     //     margin-right: auto;
+//     // }
+// }
+}

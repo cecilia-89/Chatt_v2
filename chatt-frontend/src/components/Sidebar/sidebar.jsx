@@ -1,5 +1,7 @@
 import './sidebar.scss';
 import Messages from '../Messages/messsages'
+import { Navbar } from '../Navbar/navbar'
+import Profile from '../Profile/profile'
 import axios from '../../axios'
 import cookies from '../../cookies';
 import gsap from 'gsap';
@@ -7,9 +9,10 @@ import io from 'socket.io-client';
 import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch} from 'react-redux'
-import { Display, mediaQuery } from '../../actions/index';
+import { Display, getUser} from '../../actions/index';
+import { userContainer } from '../../actions/container';
+import { userMessages } from '../../actions/messages';
 import { useMediaQuery } from 'react-responsive'
-
 
 const defaultPic = '../../src/images/profile (1).png';
 let socket;
@@ -18,15 +21,19 @@ let socket;
 const Sidebar = () => {
     // browser cookie
     const cookie = cookies.get('X-Token');
-    const userId = cookies.get('chatt_userId');
+    const Id = cookies.get('chatt_Id');
     const [input, setInput] = useState(null);
     const display = useSelector(state => state.setDisplay)
+    const user = useSelector(state => state.getUser)
+    const allContainers = useSelector(state => state.userContainer)
+    const allMessages = useSelector(state => state.userMessages)
     const dispatch = useDispatch();
-    const isMobile = useMediaQuery({ query: `(max-width: 760px)` });
-
+    const isMobile = useMediaQuery({ query: `(max-width: 768px)` });
 
     // responsive based on media width
     useEffect(() => {
+        dispatch(getUser())
+
         if (!input) setState(true)
 
         if (!isMobile || (isMobile && display)) {
@@ -39,11 +46,10 @@ const Sidebar = () => {
     }, [display, input, isMobile])
 
 
-
     // socket instance
     useEffect(() => {
         socket = io('http://192.168.21.84:9000');
-        socket.emit('user connect', userId);
+        socket.emit(' connect', Id);
         console.log('connecting')
         return () => socket.disconnect();
     }, []);
@@ -55,15 +61,13 @@ const Sidebar = () => {
     const loading = useRef(null);
     const sidebar = useRef()
     const searchWrapper = useRef(null)
-    const profileWrapper = useRef(null);
-    const profileBackground = useRef(null);
 
     const [navState, setNavState] = useState(false)
     const visible = () => setNavState(!navState)
     const navigate = useNavigate();
 
     // State variables
-    const [user, setUser] = useState([])
+    const [, set] = useState([])
     const msg = useRef(null);
     const [Msg, setMsg] = useState("");
     const [inputs, setInputs] = useState({});
@@ -72,44 +76,23 @@ const Sidebar = () => {
     const [Loading, setLoading] = useState(false);
     const [members, setMembers] = useState([])
     const [state, setState] = useState(true);
-    const [userConnected, setUserConnected] = useState(false);
-    const [otherUser, setOtherUser] = useState(null);
-    const [containers, setContainers] = useState([]);
+    const [Connected, setUserConnected] = useState(false);
+    // const [containers, setContainers] = useState([]);
     const [updateBtn, setUpdateBtn] = useState("Update");
-    const [profileState, setProfileState] = useState(false);
-    const [other, setOther] = useState({"name":"", "lastSeen":"", "id" : "", "otherId": ""})
+    const [other, setOther] = useState({"name":"", "status":"", "id" : "", "otherId": "", "lastSeen": ""})
 
     useEffect(() => {
+        // setOther(null)
         gsap.fromTo(loader.current, {display: 'block'}, {display: 'none', duration: 3})
         gsap.fromTo(chatt.current, {opacity: 0}, {opacity: 1, duration: 1, delay: 1.5})
         gsap.fromTo(details.current, {opacity: 0, y: 200}, {opacity: 1, y: 280, duration: 1})
     }, []);
 
     useEffect(() => {
-        socket.on('user connected', (userid) => {
-            // alert('user connected?', userConnected);
-            if (userId === userid) setUserConnected(true);
+        socket.on('user connected', (id) => {
+            if (Id === id) setUserConnected(true);
         });
-        return () => socket.off('user connected');
-    });
-
-    useEffect(() => {
-        axios.get("containers/all", {
-            headers: {
-                'X-Token': cookie
-                }
-        }).then((response) => {
-
-                setContainers(response.data)
-                })
-
-        axios.get('/users/me', {
-            headers: {
-                'X-Token': cookie
-            }
-        }).then((response) => {
-            setUser(response.data);
-        })
+        return () => socket.off(' connected');
     }, []);
 
 
@@ -137,21 +120,23 @@ const Sidebar = () => {
 
     useEffect(() => {
         socket.on('new message', (message) => {
+            alert('new message')
+            console.log('new message')
             // setMessages((messages) => [...messages, message]);
             if (message.containerId === other.id) {
-                setMessages((messages) => setMessagesOnly(messages, message));
+                dispatch(userMessages(message.containerId))
             }
-
         });
         return () => socket.off('new message');
     });
 
 
     useEffect(() => {
+        dispatch(userContainer())
         socket.once('container updated', (container) => {
-            // alert('update container';)
+            alert('update container')
             container.members.forEach(memberId => {
-                if (memberId.toString() === userId.toString()) {
+                if (memberId.toString() === Id.toString()) {
                     // alert(container.container._id);
                     setContainers((containers) => setContainersOnly(containers, container.container));
                 }
@@ -159,11 +144,11 @@ const Sidebar = () => {
         });
 
         return () => socket.off('container updated');
-    });
+    }, []);
 
 
-    const getMessages = (id, otheruser) => {
-        setOtherUser(otheruser);
+    const getMessages = (id) => {
+
         socket.emit('open container', id);
         axios.get(`/messages/${id}/all`, {
             headers: {
@@ -174,25 +159,9 @@ const Sidebar = () => {
         });
     }
 
-    const logout = () => {
-        axios.delete('/auth/logout', {
-            headers: {
-                'X-Token': cookie
-            }
-        }).then((response) => {
-            setUser(response.data);
-            navigate('/login');
-            cookies.remove('X-Token');
-            cookies.remove('chatt_userId');
-            cookies.remove('chatt_username');
-        });
-    }
-
-
-
     const userDisplay = () => {
 
-        if (containers.length === 0) {
+        if (allContainers.length === 0) {
             return (
             <div className='noUser'>
                 <p>You have no recent chats.</p>
@@ -201,15 +170,15 @@ const Sidebar = () => {
         }
 
         return (
-            containers.map((container) => {
-
+            allContainers.map((container) => {
                 return (<div className="wrap" key={container._id} onClick={() => {dispatch(Display())
-                                                                                getMessages(container._id);
+                                                                                setOther('')
+                                                                                dispatch(userMessages(container._id))
                                                                                 getName(container.membersUsernames.filter(name => name !== user.username));
-                                                                                getlastSeen( container.timestamp.time);
+                                                                                getlastSeen(container.timestamp.time);
                                                                                 getId(container._id);
                                                                                 get_id(container.members.filter(member => member !== user.id));
-                                                                                getContainer(container);
+
                                                                                 setMembers(container.members);}}>
                     <div>
                         <img src={defaultPic} alt="" />
@@ -231,16 +200,24 @@ const Sidebar = () => {
     }
 
     const getName = (name) => {
-        setOther(existingValues => ({
+        setOther(existingValues => (
+            {
             ...existingValues,
             name: name,
+        }))
+    }
+
+    const getStatus = (status) => {
+        setOther(existingValues => ({
+            ...existingValues,
+            status: status
         }))
     }
 
     const getlastSeen = (lastSeen) => {
         setOther(existingValues => ({
             ...existingValues,
-            lastSeen: lastSeen
+            lastSeen
         }))
     }
 
@@ -302,9 +279,6 @@ const Sidebar = () => {
       }
 
     const getContainer = (receiver) => {
-        if (window.matchMedia('(max-width: 768px)').matches) {
-            setInput(null)
-        }
 
         axios.get(`/container/${receiver}`, {
             headers: {
@@ -312,9 +286,10 @@ const Sidebar = () => {
             }
         })
           .then((response) => {
+            console.log(response)
             const containerId = response.data._id;
-            const otheruser = response.data.membersUsernames.filter((name) => name !== cookies.get('chatt_username'))[0];
-            getMessages(containerId, otheruser);
+            const other = response.data.membersUsernames.filter((name) => name !== user.username);
+            getMessages(containerId, other);
             getId(containerId);
             setMembers(response.data.members)
           })
@@ -322,45 +297,40 @@ const Sidebar = () => {
 
 
     const matchedUsers = () => {
-        const match = allUsers.filter((user) => {
-            if (new RegExp(`\^${input}`, 'i').test(user.username)) {
+
+        const match = allUsers.filter((User) => {
+            if (new RegExp(`\^${input}`, 'i').test(User.username)) {
                 return true;
             } else {
                 return false;
             }
         });
         if (!match.length) {
-            return (<div className='noUser' >No users found</div>)
+            return (<div className='noUser' >No Users found</div>)
         } else {
 
-            return match.map((user) => {
+            return match.map((User) => {
+                console.log('User', User)
+
                 return (
-                    <div className='wrap' onClick={() => {dispatch(Display())
-                        getContainer(user.id);
-                        getName(user.username);
-                        get_id(user.id);
+                    <div className='wrap' onClick={() => {dispatch(Display());
+                        setOther('')
+                        getContainer(User.id);
+                        getName(User.username);
+                        getStatus(User.quote)
+                        get_id(User.id);
                         }} >
                         <div>
                             <img src={defaultPic} alt=""/>
                         </div>
                         <div className='details'>
-                            <span>{user.username}</span>
-                            <p>{user.quote}</p>
+                            <span>{User.username}</span>
+                            <p>{User.quote}</p>
                         </div>
                     </div>
                 )
             });
         }
-    }
-
-    const removeProfile = () => {
-        profileBackground.current.style.display = 'none';
-        profileWrapper.current.style.display = 'none';
-    }
-
-    const showProfile = () => {
-        profileBackground.current.style.display = 'flex';
-        profileWrapper.current.style.display = 'flex';
     }
 
     const updateStatus = (event) => {
@@ -377,11 +347,11 @@ const Sidebar = () => {
               setUpdateBtn("Updating...");
               loading.current.style.opacity = 0.6
               loading.current.style.cursor = 'not-allowed';
-              const userId = cookies.get('chatt_userId');
-              cookies.remove('userid');
+              const Id = cookies.get('chatt_Id');
+              cookies.remove('id');
               axios.put('/users/update-status-quote',
               {
-                userId, quote
+                Id, quote
               },
               {
                 method: 'put',
@@ -411,20 +381,7 @@ const Sidebar = () => {
     return (
         <>
             <section ref={sidebar} className='sidebar'>
-            <nav>
-                <div> Chatt </div>
-                    <div>
-                        <div onClick={visible}>
-                            <ion-icon name="ellipsis-vertical"></ion-icon>
-                        </div>
-                        <div className={navState ? "dropdown": "hidden"}>
-                        <ul>
-                            <li onClick={showProfile}>Profile</li>
-                            <li onClick={logout}>Log Out</li>
-                        </ul>
-                    </div>
-                </div>
-            </nav>
+            <Navbar />
             <div className='chats'>
                 <div className='menu'>
                     <input type="search" placeholder='Search to start a converstion' value={input || ''} onClick={getUsers} onChange={handleChange} />
@@ -442,42 +399,14 @@ const Sidebar = () => {
             </div>
             </section>
 
-            <Messages   messages={messages}
-                        user={user}
-                        other={other}
-                        otherUser={otherUser}
-                        setContainers={setContainers}
-                        setMessages={setMessages}
-                        setState={setState}
-                        setSearchInput={setInput}
-                        socket={socket}/>
-
+            <Messages other={other} searchInput={input} setSearchInput={setInput}/>
             <div ref={loader} className='loading'>
                 <div ref={details}>
                     <p>Chatt Instant Messaging</p>
                     <p ref={chatt}> Keeping in touch with friends, family and onnecting with new people all over the world </p>
                 </div>
             </div>
-            <div ref={profileBackground} className="profile-background">
-            </div>
-            <div ref={profileWrapper} className="profile-wrapper">
-                <div className="user-profile-box" >
-                    <div className="header-box">
-                        <div className="header-text" >Profile</div>
-                        <div className="exit" onClick={removeProfile} >
-                            <ion-icon name="close-outline"></ion-icon>
-                        </div>
-                    </div>
-                    <img src={defaultPic} alt="" />
-                    <div><p>{'@' + user.username}</p></div>
-                    <div><p>{user.quote}</p></div>
-                    <div><p>{user.email}</p></div>
-                    <p><u className="other-options" >Update username</u></p>
-                    <p><u className="other-options" >Update email</u></p>
-                    <p><u className="other-options" >Update password</u></p>
-                    <p><u className="other-options" >Update status quote</u></p>
-                </div>
-            </div>
+            <Profile/>
         </>
         );
 }

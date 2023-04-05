@@ -1,5 +1,3 @@
-import { useMediaQuery } from 'react-responsive'
-
 // Defines redux reducers
 
 const setDisplay = (state = true, action) => {
@@ -12,13 +10,13 @@ const setDisplay = (state = true, action) => {
     }
 }
 
-const mediaquery = (state = window.innerWidth, action) => {
+const profileDisplay = (state = true, action) => {
     switch(action.type) {
-        case "MEDIA-QUERY":
-            return state
+        case "PROFILE-DISPLAY":
+            return !state
         default:
             return state
     }
 }
 
-export { setDisplay, mediaquery };
+export { setDisplay, profileDisplay };

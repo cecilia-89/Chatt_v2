@@ -1,5 +1,4 @@
 import mongoose from 'mongoose';
-import pusher from './pusher.js';
 
 class DBClient {
   constructor () {
@@ -26,7 +25,7 @@ class DBClient {
             console.log('user connected', userId);
             socket.emit('user connected', userId);
           });
-    
+
           // socket.off('user connect');
           socket.on('open container', (containerId) => {
             socket.join(containerId);

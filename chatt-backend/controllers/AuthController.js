@@ -5,7 +5,10 @@ import datetime from 'node-datetime';
 import redis from '../utils/redis.js'
 import Users from '../models/Users.js';
 import worker from '../worker.js';
+import DB from '../utils/db.js'
 
+
+DB.connectDB()
 
 class AuthController {
 

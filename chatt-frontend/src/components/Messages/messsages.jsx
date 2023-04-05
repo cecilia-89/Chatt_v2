@@ -4,22 +4,22 @@ import cookies from '../../cookies'
 import { v4 } from 'uuid';
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch} from 'react-redux'
+import { userMessages } from '../../actions/messages';
 import { useMediaQuery } from 'react-responsive'
-import { Display, mediaQuery } from '../../actions/index';
+import { Display } from '../../actions/index';
+import { userContainer } from '../../actions/container';
 
 
-const Messages = ({ messages, user, other, otherUser, setContainers, setState, setSearchInput, socket, setMessages}) => {
+const Messages = ({ other, setSearchInput}) => {
 
     const [input, setInput] = useState('')
     const scrollbar = useRef(null);
     const message = useRef()
     const lastMessage = useRef(null);
-    const setRef = useCallback(node => {
-        if (node) { node.scrollIntoView({ smooth: true }); }
-    })
     const cookie = cookies.get('X-Token')
-
     const messageDisplay = useSelector(state => state.setDisplay);
+    const allMessages = useSelector(state => state.userMessages);
+    const user = useSelector(state => state.getUser);
     const isMobile = useMediaQuery({query: `(max-width: 760px)`});
     const dispatch = useDispatch()
 
@@ -49,36 +49,28 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
             type: "text",
             dummyId: v4()
         }
-        setMessages((messages) => [...messages, data])
-        setInput("")
-        setSearchInput("");
 
+        setSearchInput("");
 
         await axios.post('/messages/new', data, {
             headers: {
                 'X-Token': cookie
              }
         })
-        setState(true);
-
-        // axios.get("containers/all", {
-        //     headers: {
-        //         'X-Token': cookie
-        //     }
-        // }).then((response) => {
-
-        // setContainers(response.data)
-        // })
+        dispatch(userMessages(other.id))
+        dispatch(userContainer())
+        setInput("")
     }
 
     useEffect(() => {
+        console.log('messages', allMessages)
         if (lastMessage.current !== null) {
             lastMessage.current.scrollIntoView({ smooth: true });
         }
-    }, [messages]);
+    }, [allMessages]);
 
     const displayMessage = () => {
-        if (messages.length === 0 && otherUser === null) {
+        if (!other && allMessages.length === 0) {
             return (
             <div ref={scrollbar} className="empty">
                 <div>
@@ -98,7 +90,7 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
                 <div><img src="../../src/images/profile (1).png" alt="" /></div>
                 <div>
                     <p>{other.name}</p>
-                    <p>Last reply at {other.lastSeen}</p>
+                    {other.lastSeen? <p>Last reply at {other.lastSeen}</p> : <p>{other.status}</p>}
                 </div>
                 <div>
                     <ion-icon name="call"></ion-icon>
@@ -106,13 +98,13 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
             </div>
 
             <div ref={scrollbar} className='messages'>
-                {messages.map((message, index) => {
-                    const LastMssage = messages.length - 1 === index;
+                {allMessages.map((message, index) => {
+                    const LastMssage = allMessages.length - 1 === index;
                     if (Object.keys(message).length !== 0 && user !== undefined) {
                         return (
                             <div key={index} ref={LastMssage ? lastMessage: null}
                                 className={message.receiverId !==  user.id ? 'current-user-wrapper': 'other-user-wrapper'}>
-                                <div className='time-stamp'>{message.timestamp ? message.timestamp.time : 'sending'}</div>
+                                <div className='time-stamp'>{message.timestamp? message.timestamp.time : "sent"}</div>
                                 <div>{message.message}</div>
                             </div>
                         )
@@ -141,13 +133,9 @@ const Messages = ({ messages, user, other, otherUser, setContainers, setState, s
             )
         }
 
-
-
     return (
         <section ref={message} className='messages-wrapper'>
-
             {displayMessage()}
-
         </section>
         );
 };

@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 class SocketIO {
 
   socketConnection (server) {
+
     const io = require('socket.io')(server, {
       pingTimeout: 60000,
       cors: {

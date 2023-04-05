@@ -114,7 +114,7 @@
 
 
     .messages {
-        height: 88%;
+        height: 86.9%;
         overflow-y: scroll;
         overflow-x:hidden;
         scrollbar-width: 5px;
@@ -181,6 +181,7 @@
 
     .search-bar {
         position: fixed;
+        box-shadow: 5px 4px 4px 4px lightgray;
         bottom:0;
         width: inherit;
         background: white;
@@ -192,7 +193,7 @@
         &>form {
             display: flex;
             width:100%;
-            padding: 13px 50px 13px 0;
+            padding: 13px 10px 20px 0;
 
             .icons {
                 display: flex;
@@ -223,8 +224,8 @@
                 color: index.$primary-color;
                 background: none;
                 bottom: 12px;
-                position: absolute;
-                right: 5px;
+                display:flex;
+                align-items: center;
                 font-size: 32px;
 
             }
