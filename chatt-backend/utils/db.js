@@ -16,11 +16,14 @@ class DBClient {
         this.alive = true;
         console.log('DB connection established');
         const db = mongoose.connection;
+
+
         io.disconnectSockets();
         io.on('connection', (socket) => {
+          console.log(socket.id)
           console.log('Connected to socket');
           socket.emit('connected to socket');
-          socket.on('user connect', (userId) => {
+          socket.on('connected', (userId) => {
             socket.join(userId);
             console.log('user connected', userId);
             socket.emit('user connected', userId);

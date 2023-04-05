@@ -24,7 +24,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <Provider store={store}>
    <Router>
       <Routes>
-        <Route path="/messages" element={<Sidebar />}></Route>
+        <Route path="/" element={<Sidebar />}></Route>
         <Route path="/signup" element={<Signup />}></Route>
         <Route path="/login" element={<Login />}></Route>
         <Route path="/update-status-quote" element={<UpdateStatusQuote />}></Route>

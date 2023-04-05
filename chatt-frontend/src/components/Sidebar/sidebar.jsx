@@ -43,16 +43,17 @@ const Sidebar = () => {
             sidebar.current.style.display = 'none';
         }
 
-    }, [display, input, isMobile])
+    }, [display, input, isMobile, cookie])
 
 
     // socket instance
     useEffect(() => {
-        socket = io('http://192.168.21.84:9000');
-        socket.emit(' connect', Id);
+        socket = io('http://localhost:9000');
+        socket.emit('connected', user.id);
         console.log('connecting')
         return () => socket.disconnect();
     }, []);
+
 
     // DOM references
     const chatt = useRef()
@@ -90,8 +91,12 @@ const Sidebar = () => {
 
     useEffect(() => {
         socket.on('user connected', (id) => {
-            if (Id === id) setUserConnected(true);
+            if (user.id === id) {
+                setUserConnected(true);
+                console.log(true)
+            } else console.log(false)
         });
+
         return () => socket.off(' connected');
     }, []);
 
@@ -159,6 +164,7 @@ const Sidebar = () => {
         });
     }
 
+
     const userDisplay = () => {
 
         if (allContainers.length === 0) {
@@ -173,12 +179,11 @@ const Sidebar = () => {
             allContainers.map((container) => {
                 return (<div className="wrap" key={container._id} onClick={() => {dispatch(Display())
                                                                                 setOther('')
-                                                                                dispatch(userMessages(container._id))
+                                                                                getContainer(container._id)
                                                                                 getName(container.membersUsernames.filter(name => name !== user.username));
                                                                                 getlastSeen(container.timestamp.time);
                                                                                 getId(container._id);
                                                                                 get_id(container.members.filter(member => member !== user.id));
-
                                                                                 setMembers(container.members);}}>
                     <div>
                         <img src={defaultPic} alt="" />

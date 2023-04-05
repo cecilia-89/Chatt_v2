@@ -7,9 +7,6 @@ import axios from '../../axios.js';
 import cookies from '../../cookies.js';
 
 const Login = () => {
-    gsap.registerPlugin()
-    const user1 = useRef()
-    const user2 = useRef()
     const msg = useRef(null);
     const loading = useRef(null);
     const [Msg, setMsg] = useState("");
@@ -17,10 +14,6 @@ const Login = () => {
     const [Loading, setLoading] = useState(false);
     const [loginBtn, setLoginBtn] = useState("Login")
     const navigate = useNavigate();
-
-    useEffect(() => {
-        gsap.fromTo(user1, {opacity: 0}, {opacity: 1, duration: 3})
-    });
 
     const handleChange = (event) => {
       const name = event.target.name;

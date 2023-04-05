@@ -1,13 +1,13 @@
-const mongoose = require('mongoose');
+import { Server } from 'socket.io';
 
 class SocketIO {
 
   socketConnection (server) {
 
-    const io = require('socket.io')(server, {
+    const io = new Server(server, {
       pingTimeout: 60000,
       cors: {
-        origin: 'http://127.0.0.1:5173'
+        origin: '*'
       }
     });
     return io;
@@ -55,4 +55,4 @@ class SocketIO {
 }
 
 const socketIO = new SocketIO();
-module.exports = socketIO;
+export default socketIO;
