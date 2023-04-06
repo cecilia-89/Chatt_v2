@@ -4,13 +4,12 @@ import cookies from '../../cookies'
 import { v4 } from 'uuid';
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useSelector, useDispatch} from 'react-redux'
-import { userMessages } from '../../actions/messages';
 import { useMediaQuery } from 'react-responsive'
 import { Display } from '../../actions/index';
 import { userContainer } from '../../actions/container';
 
 
-const Messages = ({ other, setSearchInput}) => {
+const Messages = ({ other, setSearchInput, messages, setMessages}) => {
 
     const [input, setInput] = useState('')
     const scrollbar = useRef(null);
@@ -18,7 +17,6 @@ const Messages = ({ other, setSearchInput}) => {
     const lastMessage = useRef(null);
     const cookie = cookies.get('X-Token')
     const messageDisplay = useSelector(state => state.setDisplay);
-    const allMessages = useSelector(state => state.userMessages);
     const user = useSelector(state => state.getUser);
     const isMobile = useMediaQuery({query: `(max-width: 760px)`});
     const dispatch = useDispatch()
@@ -57,20 +55,20 @@ const Messages = ({ other, setSearchInput}) => {
                 'X-Token': cookie
              }
         })
-        dispatch(userMessages(other.id))
+        setMessages([...messages, data])
         dispatch(userContainer())
         setInput("")
     }
 
     useEffect(() => {
-        console.log('messages', allMessages)
+
         if (lastMessage.current !== null) {
             lastMessage.current.scrollIntoView({ smooth: true });
         }
-    }, [allMessages]);
+    }, [messages]);
 
     const displayMessage = () => {
-        if (!other && allMessages.length === 0) {
+        if (!other && messages.length === 0) {
             return (
             <div ref={scrollbar} className="empty">
                 <div>
@@ -98,8 +96,8 @@ const Messages = ({ other, setSearchInput}) => {
             </div>
 
             <div ref={scrollbar} className='messages'>
-                {allMessages.map((message, index) => {
-                    const LastMssage = allMessages.length - 1 === index;
+                {messages.map((message, index) => {
+                    const LastMssage = messages.length - 1 === index;
                     if (Object.keys(message).length !== 0 && user !== undefined) {
                         return (
                             <div key={index} ref={LastMssage ? lastMessage: null}

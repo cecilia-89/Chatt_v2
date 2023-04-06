@@ -11,7 +11,6 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch} from 'react-redux'
 import { Display, getUser} from '../../actions/index';
 import { userContainer } from '../../actions/container';
-import { userMessages } from '../../actions/messages';
 import { useMediaQuery } from 'react-responsive'
 
 const defaultPic = '../../src/images/profile (1).png';
@@ -26,13 +25,13 @@ const Sidebar = () => {
     const display = useSelector(state => state.setDisplay)
     const user = useSelector(state => state.getUser)
     const allContainers = useSelector(state => state.userContainer)
-    const allMessages = useSelector(state => state.userMessages)
     const dispatch = useDispatch();
     const isMobile = useMediaQuery({ query: `(max-width: 768px)` });
 
     // responsive based on media width
     useEffect(() => {
         dispatch(getUser())
+        dispatch(userContainer())
 
         if (!input) setState(true)
 
@@ -78,7 +77,7 @@ const Sidebar = () => {
     const [members, setMembers] = useState([])
     const [state, setState] = useState(true);
     const [Connected, setUserConnected] = useState(false);
-    // const [containers, setContainers] = useState([]);
+    const [container, setContainer] = useState([]);
     const [updateBtn, setUpdateBtn] = useState("Update");
     const [other, setOther] = useState({"name":"", "status":"", "id" : "", "otherId": "", "lastSeen": ""})
 
@@ -97,59 +96,58 @@ const Sidebar = () => {
             } else console.log(false)
         });
 
-        return () => socket.off(' connected');
-    }, []);
+        socket.emit('container', container)
+        console.log('user', user)
+
+        return () => socket.off('user connected');
+    }, [user, container]);
 
 
-    const setContainersOnly = (oldContainers, updatedContainer) => {
-        const newContainers = oldContainers.filter(container => {
-            if (container._id !== updatedContainer._id) {
-                return true;
-            } else {
-                return false;
-            }
-        });
-        return [updatedContainer, ...newContainers];
-    }
+    // const setContainersOnly = (oldContainers, updatedContainer) => {
+    //     const newContainers = oldContainers.filter(container => {
+    //         if (container._id !== updatedContainer._id) {
+    //             return true;
+    //         } else {
+    //             return false;
+    //         }
+    //     });
+    //     return [updatedContainer, ...newContainers];
+    // }
 
-    const setMessagesOnly = (messages, newMessage) => {
-        const newMessages = messages.filter(message => {
-            if (message.dummyId !== newMessage.dummyId) {
-                return true;
-            } else {
-                return false;
-            }
-        });
-        return [...newMessages, newMessage];
-    }
+    // const setMessagesOnly = (messages, newMessage) => {
+    //     const newMessages = messages.filter(message => {
+    //         if (message.dummyId !== newMessage.dummyId) {
+    //             return true;
+    //         } else {
+    //             return false;
+    //         }
+    //     });
+    //     return [...newMessages, newMessage];
+    // }
 
     useEffect(() => {
         socket.on('new message', (message) => {
-            alert('new message')
-            console.log('new message')
-            // setMessages((messages) => [...messages, message]);
-            if (message.containerId === other.id) {
-                dispatch(userMessages(message.containerId))
-            }
+            console.log('message', message)
+                setMessages([...messages, message]);
         });
-        return () => socket.off('new message');
-    });
+        console.log('messages', messages)
+        return () => socket.off("new message");
+    }, [messages]);
 
 
-    useEffect(() => {
-        dispatch(userContainer())
-        socket.once('container updated', (container) => {
-            alert('update container')
-            container.members.forEach(memberId => {
-                if (memberId.toString() === Id.toString()) {
-                    // alert(container.container._id);
-                    setContainers((containers) => setContainersOnly(containers, container.container));
-                }
-            });
-        });
+    // useEffect(() => {
+    //     dispatch(userContainer())
+    //     socket.once('container updated', (container) => {
+    //         container.members.forEach(memberId => {
+    //             if (memberId.toString() === Id.toString()) {
+    //                 // alert(container.container._id);
+    //                 setContainers((containers) => setContainersOnly(containers, container.container));
+    //             }
+    //         });
+    //     });
 
-        return () => socket.off('container updated');
-    }, []);
+    //     return () => socket.off('container updated');
+    // }, []);
 
 
     const getMessages = (id) => {
@@ -178,8 +176,9 @@ const Sidebar = () => {
         return (
             allContainers.map((container) => {
                 return (<div className="wrap" key={container._id} onClick={() => {dispatch(Display())
+                                                                                getMessages(container._id)
+                                                                                setContainer(container._id)
                                                                                 setOther('')
-                                                                                getContainer(container._id)
                                                                                 getName(container.membersUsernames.filter(name => name !== user.username));
                                                                                 getlastSeen(container.timestamp.time);
                                                                                 getId(container._id);
@@ -283,21 +282,22 @@ const Sidebar = () => {
         setInputs(values => ({ ...values, [name]: value }));
       }
 
-    const getContainer = (receiver) => {
+    const getContainer = (receiverId) => {
 
-        axios.get(`/container/${receiver}`, {
+        const response = axios.get(`/container/${receiverId}`, {
             headers: {
                 'X-Token': cookies.get('X-Token')
             }
         })
-          .then((response) => {
-            console.log(response)
-            const containerId = response.data._id;
-            const other = response.data.membersUsernames.filter((name) => name !== user.username);
-            getMessages(containerId, other);
-            getId(containerId);
-            setMembers(response.data.members)
-          })
+        // const containerId = response.data._id;
+        // console.log('I am here')
+
+        // socket.emit('open container', containerId)
+        // const other = response.data.membersUsernames.filter((name) => name !== user.username);
+        // getMessages(containerId, other);
+        // getId(containerId);
+        // setMembers(response.data.members)
+
     }
 
 
@@ -315,8 +315,6 @@ const Sidebar = () => {
         } else {
 
             return match.map((User) => {
-                console.log('User', User)
-
                 return (
                     <div className='wrap' onClick={() => {dispatch(Display());
                         setOther('')
@@ -404,7 +402,7 @@ const Sidebar = () => {
             </div>
             </section>
 
-            <Messages other={other} searchInput={input} setSearchInput={setInput}/>
+            <Messages other={other} setSearchInput={setInput} messages={messages} setMessages={setMessages}/>
             <div ref={loader} className='loading'>
                 <div ref={details}>
                     <p>Chatt Instant Messaging</p>
